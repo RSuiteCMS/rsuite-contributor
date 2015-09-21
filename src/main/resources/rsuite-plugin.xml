@@ -1,0 +1,51 @@
+<rsuite-plugin id="@pluginId@" version="@pluginVersion@ at @timeStamp@" description="Demo of various methods of creating a page in RSuite">
+	<extensionProvider id="rsuite.TransformationProvider">
+		<transformationProvider type="pages.ProgrammaticTransformationDemo" />
+		<namedPreviewTransformer      mimeType="text/html"
+		                         transformName="pages.XSLTTransformationDemo"
+		                        previewXsltUri="rsuite:/res/plugin/@pluginId@/xslt-transformation-demo.xsl"
+		/>
+	</extensionProvider>
+
+
+	<extensionProvider id="rsuite.WebService">
+		<staticWebService path="/WebContent" root="/@pluginId@"/>
+		<remoteApiDefinition handler="pages.RAPIDemo" id="pages.RAPIDemo"/>
+	</extensionProvider>
+
+	<extensionProvider id="rsuite.UI">
+		<scriptInclude src="/@pluginId@/cmsui/static.js" />
+		<scriptInclude src="/@pluginId@/cmsui/pages-ember-common.js" />
+		<scriptInclude src="/@pluginId@/cmsui/inspector.js" />
+		<scriptInclude src="/@pluginId@/cmsui/activity.js" />
+	</extensionProvider>
+
+	<extensionProvider id="rsuite.ContextMenu">
+		<contextMenuRuleSet>
+			<menuItemList>
+	            <menuItem actionName="pages:static" label="Static resource">
+					<property name="rsuite-path" value="Pages" />
+	            </menuItem>
+				<menuItem actionName="rsuite:preview" label="XSL Transform">
+					<property name="transform" value="pages.XSLTTransformationDemo" />
+					<property name="rsuite-path" value="Pages" />
+				</menuItem>
+				<menuItem actionName="rsuite:preview" label="Java Transform">
+					<property name="transform" value="pages.ProgrammaticTransformationDemo" />
+					<property name="rsuite-path" value="Pages" />
+				</menuItem>
+				<menuItem actionName="rsuite:invokeWebservice" label="Remote API call">
+					<property name="remoteApiName" value="pages.RAPIDemo" />
+					<property name="rsuite-path" value="Pages" />
+					<property name="useTransport" value="window" />
+				</menuItem>
+				<menuItem actionName="pages:inspector" label="RSuite Inspector">
+					<property name="rsuite-path" value="Pages" />
+				</menuItem>
+				<menuItem actionName="pages:activity" label="RSuite Activity">
+					<property name="rsuite-path" value="Pages" />
+				</menuItem>
+			</menuItemList>
+		</contextMenuRuleSet>
+	</extensionProvider>
+</rsuite-plugin>

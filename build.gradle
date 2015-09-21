@@ -1,0 +1,15 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+
+apply from: 'http://ivy.reallysi.com/ivy-repo/rsuite-std-plugin-tasks.gradle'
+apply from: 'http://ivy.reallysi.com/ivy-repo/repositories-std-include.gradle'
+
+group = "rsi"
+
+dependencies {
+	compile ('rsi:rsuite-api:4.1.10') {
+		transitive = false
+	}
+    compile("apache:commons-logging:1.1")
+    compile("apache:commons-io:1.4")
+}

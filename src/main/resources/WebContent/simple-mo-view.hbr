@@ -1,0 +1,5 @@
+{{#if model}}
+	Looking at {{model.finalManagedObject.displayName}} (uri: {{model.canonicalUri}})
+{{else}}
+	Please go to the Content tab and select an object to examine.
+{{/if}}
