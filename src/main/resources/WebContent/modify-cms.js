@@ -14,7 +14,11 @@ var CONTIRUBUTOR_ROLE = 'Contributor';
 			'rsuite:downloadConfirm': true,
 			'rsuite:reorder': true,
 			'rsuite:downloadAsZip': true,
-			'rsuite:newFolder': true
+			'rsuite:newFolder': true,
+			'rsuite:notify': true,
+			'rsuite:invokeWebservice': true,
+			'rsuite:messageDialog': true,
+			'contributor:uploadAndAttach': true
 		};
 
 	function clearTabs() {
