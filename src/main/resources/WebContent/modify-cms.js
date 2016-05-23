@@ -18,7 +18,11 @@ var CONTIRUBUTOR_ROLE = 'Contributor';
 			'rsuite:notify': true,
 			'rsuite:invokeWebservice': true,
 			'rsuite:messageDialog': true,
-			'contributor:uploadAndAttach': true
+			'contributor:uploadAndAttach': true,
+			'rsuite:createContent': true,
+			'rsuite:newContent': true,
+			'rsuite:workflow:attachContent': true,
+			'rsuite:advanceTask': true
 		};
 
 	function clearTabs() {

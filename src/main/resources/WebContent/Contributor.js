@@ -148,7 +148,17 @@
 RSuite.Action({
 	id: 'contributor:uploadAndAttach',
 	icon: 'add',
-	Dialog: RSuite.view.Dialog.UploadFiles,
+	Dialog: RSuite.view.Dialog.UploadFiles.extend()
+		.reopen({
+			setup: function () {
+				var myName = this.constructor.toString(),
+					menuContext = this.get('menuContext');
+				if (!menuContext) {
+					console.log(myName + " must be passed a menuContext.");
+					this.dialogClose();
+				}
+			}.on('init')
+		}),
 	displayDialog: function (context) {
 		return new Promise(function (resolve, reject) {
 			var dlg = this.Dialog.create({ menuContext: context }).dialogShow();
@@ -185,7 +195,7 @@ RSuite.Action({
 						RSuite.Error.show(error);
 						dlg.dialogClose();
 					});
-				}, function (xhr, status, error) {
+				}).catch(function (xhr, status, error) {
 					RSuite.Error.show(error);
 					dlg.dialogClose();
 				}).then(resolve, reject);
