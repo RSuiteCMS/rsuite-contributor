@@ -10,7 +10,7 @@ This should be developed as a demo plugin, and not expected to last as "real cod
 
 Contributor experience should be a pared down workflow page:
 
-1. ~~Use the "Contributor" role to determine whether the user gets the Contributor experience ~~
+1. ~~Use the "Contributor" role to determine whether the user gets the Contributor experience~~
 1. ~~All top navigation components should be removed except the RSuite logo and the user name/user menu.~~
 1. ~~Only the workflow page should be present (no Contents, Reports, or Dashboard page)~~
 1. ~~Workflow search form should be removed. (In future version can add this back in with limited set of fields.)~~
