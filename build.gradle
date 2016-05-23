@@ -7,9 +7,9 @@ apply from: 'http://ivy.reallysi.com/ivy-repo/repositories-std-include.gradle'
 group = "rsi"
 
 dependencies {
-	compile ('rsi:rsuite-api:4.1.10') {
-		transitive = false
-	}
+    compile ('rsi:rsuite-api:5.0.1') {
+	    transitive = false
+    }
     compile("apache:commons-logging:1.1")
     compile("apache:commons-io:1.4")
 }
