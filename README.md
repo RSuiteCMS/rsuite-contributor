@@ -11,6 +11,7 @@ This initial spike will be used for the de Gruyter PoC that is to be completed i
 This should be developed as a demo plugin, and not expected to last as "real code". We should avoid worrying about the engineering design and implementation details and instead focus on user experience.
 
 Contributor experience should be a pared down workflow page:
+
 1. ~~Use the "Contributor" role to determine whether the user gets the Contributor experience ~~
 1. ~~All top navigation components should be removed except the RSuite logo and the user name/user menu.~~
 1. ~~Only the workflow page should be present (no Contents, Reports, or Dashboard page)~~
@@ -32,6 +33,7 @@ Contributor experience should be a pared down workflow page:
 	* ~~Workflow summary view~~
 
 Key changes for more intuitive UI for less expert users:
+
 1. ~~Each workflow results should include a "Complete Task" button. Clicking it should do the same thing as clicking the Complete Task button in Inspect.~~
 1. It should be possible to interact with attachments through workflow results. However, the features are not exactly the same as for Inspect.
 	* ~~The user should be able to remove an attachment.~~
