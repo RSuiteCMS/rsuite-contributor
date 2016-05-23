@@ -6,8 +6,6 @@ little access to the wider world of RSuite functionality.
 
 Requirements:
 
-This initial spike will be used for the de Gruyter PoC that is to be completed in May. In order to meet the project timeline, we should complete the spike no later than 5/20, which means we need a version for Lisa to bang on by 5/19.
-
 This should be developed as a demo plugin, and not expected to last as "real code". We should avoid worrying about the engineering design and implementation details and instead focus on user experience.
 
 Contributor experience should be a pared down workflow page:
