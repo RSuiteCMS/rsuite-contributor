@@ -7,3 +7,5 @@ bin
 *.log
 .svn
 .settings
+.classpath
+.project
