@@ -26,19 +26,20 @@ Contributor experience should be a pared down workflow page:
 	* ~~Due~~
 	* ~~Completed~~
 1. ~~Workflow results should NOT include workflow name, ids, the menu gear, or the assignee~~
-1. The Inspect panel should not contain the following:
+1. ~~The Inspect panel should not contain the following:~~
 	* ~~Task summary view~~
 	* ~~Workflow summary view~~
 
-Key changes for more intuitive UI for less expert users:
+~~Key changes for more intuitive UI for less expert users:~~
 
 1. ~~Each workflow results should include a "Complete Task" button. Clicking it should do the same thing as clicking the Complete Task button in Inspect.~~
-1. It should be possible to interact with attachments through workflow results. However, the features are not exactly the same as for Inspect.
+1. ~~It should be possible to interact with attachments through workflow results. However, the features are not exactly the same as for Inspect.~~
 	* ~~The user should be able to remove an attachment.~~
-	* The user should be able to upload a new attachment from the file system.
-	* The user should be able to upload a new version of an attachment from the file system.
-	* The user should NOT be able to create a new attachment by attaching existing RSuite objects to the task
-	* The user should be able to download an attachment
-	* The user should be able to edit an attachment if it is an XML MO; for the initial spike, this will mean launching the oXygen WebApp editor
+	* ~~The user should be able to upload a new attachment from the file system.~~
+	* ~~The user should be able to upload a new version of an attachment from the file system.~~
+	* ~~The user should NOT be able to create a new attachment by attaching existing RSuite objects to the task~~
+	* ~~The user should be able to download an attachment~~
+	* ~~The user should be able to edit an attachment if it is an XML MO; for the initial spike, this will mean launching the oXygen WebApp editor~~
+		Note: The O₂ Webapp editor uses rsuite:invokeWebservice, which is whitelisted for Contributors.
 
-
+Requirements should be complete
