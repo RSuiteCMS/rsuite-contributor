@@ -146,8 +146,51 @@
 	});
 }());
 RSuite.Action({
-	id: 'rsuite:contributor:uploadAndAttach',
-	invoke: function () {
-		debugger
-	}
+	id: 'contributor:uploadAndAttach',
+	icon: 'add',
+	Dialog: RSuite.view.Dialog.UploadFiles,
+	displayDialog: function (context) {
+		return new Promise(function (resolve, reject) {
+			var dlg = this.Dialog.create({ menuContext: context }).dialogShow();
+			dlg.done(function () {
+				resolve(dlg);
+			})
+				.fail(function () {
+					dlg.dialogClose();
+					reject();
+				});
+		}.bind(this));
+	},
+	invoke: function (context) {
+		var caType = Ember.get(context, 'caType'),
+			dlg = this.Dialog.create({ menuContext: context }),
+			xhr;
+		return new Promise(function (resolve, reject) {
+			this.displayDialog(context).then(function (dlg) {
+				var promise = RSuite.Action('rsuite:createContent', context),
+					upload = context.upload;
+				promise.then(function (resolution) {
+					dlg.set('uploadHandle', resolution.upload);
+					resolution.request.done(function (result) {
+						context.set('managedObjects', Object.keys(result.managedObjects).map(function (moId) {
+							// By this point, the MO from the response will have just entered the MO cache.
+							return RSuite.model.ManagedObject.getCached(moId);
+						}));
+						return RSuite.whenAll(context.get('managedObjects')).done(function () {
+							return RSuite.Action('rsuite:workflow:attachContent', context).then(function () {
+								dlg.dialogClose();
+							});
+						});
+					}).fail(function (xhr, status, error) {
+						RSuite.Error.show(error);
+						dlg.dialogClose();
+					});
+				}, function (xhr, status, error) {
+					RSuite.Error.show(error);
+					dlg.dialogClose();
+				}).then(resolve, reject);
+			}, reject);
+		}.bind(this));
+	},
+	isValid: 'isMyTask'
 });

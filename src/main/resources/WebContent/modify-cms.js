@@ -65,18 +65,18 @@ var CONTIRUBUTOR_ROLE = 'Contributor';
 			addTabs(defaultTabs);
 			$('html').removeClass('contributor');
 		} else {
-			addTabs(contributorTabs);
 			$('html').addClass('contributor');
 			// Cancel bunches of Workflow stuff.
 			var insp = RSuite.component.WorkflowInspect.proto().controller.inspectors;
-			// Remove non-contributor inspectors
 			insp.replace(0, insp.length, ['Comments', 'Attachments']);
 			RSuite.controller.reopen({
 				supportEnabled: function () {}.property()
 			});
 			RSuite.component.WorkflowInspect.AttachmentsView.proto().headerViews[0].proto().AddButton.reopen({
-				actionName: 'rsuite:contributor:uploadAndAttach'
+				actionName: 'contributor:uploadAndAttach'
 			});
+			addTabs(contributorTabs);
+			// Remove non-contributor inspectors
 		}
 	}.bind(RSuite.model.session));
 	RSuite.Tab.Workflow.Controller.proto().navigationControls[0].reopen({ role: 'action-menu' });
