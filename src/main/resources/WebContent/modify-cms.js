@@ -6,15 +6,15 @@ var CONTIRUBUTOR_ROLE = 'Contributor';
 			Contributor.Activity
 		],
 		allowedContributorActions = {
-			'rsuite:replace',
-			'rsuite:rename',
-			'rsuite:checkIn',
-			'rsuite:checkOut',
-			'rsuite:download',
-			'rsuite:downloadConfirm',
-			'rsuite:reorder',
-			'rsuite:downloadAsZip',
-			'rsuite:newFolder'
+			'rsuite:replace': true,
+			'rsuite:rename': true,
+			'rsuite:checkIn': true,
+			'rsuite:checkOut': true,
+			'rsuite:download': true,
+			'rsuite:downloadConfirm': true,
+			'rsuite:reorder': true,
+			'rsuite:downloadAsZip': true,
+			'rsuite:newFolder': true
 		};
 
 	function clearTabs() {
