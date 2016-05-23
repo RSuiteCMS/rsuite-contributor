@@ -6,3 +6,4 @@ bin
 *.bak
 *.log
 .svn
+.settings
