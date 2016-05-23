@@ -1,0 +1,26 @@
+.contributor {
+	#app-layout {
+		div.app-header { height: 30px !important; }
+		div.app-body { top: 30px !important; }
+		ul.app-tabs[role="chrome-tabs"], rsuite-tile.app-popouts { display: none !important; }
+		rsuite-tile.app-menu-tile { display: none !important; }
+		rsuite-tile.app-session-tile { padding-top: 3px !important; }
+		rsuite-tile.support-view { display: none !important; }
+	}
+	rsuite-tile.navigation-view rs-icon[role="action-menu"] { display: none; }
+	.complete-task-view {
+		width: 1px;
+		vertical-align: middle;
+		.ui-button.task-button {
+			rs-icon.ui-button-icon-primary {
+				icon {
+					color: white !important;
+				}
+				font-size: 24px;
+				margin-top: 0em;
+				margin-bottom: -3px;
+			}
+			margin: 0.25em 0.5em;
+		}
+	}
+}
