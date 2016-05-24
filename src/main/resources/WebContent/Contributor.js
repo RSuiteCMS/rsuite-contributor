@@ -7,9 +7,24 @@
 			'currentTask.endDate': true
 		},
 		forbiddenWfSearches = {
-			'rsuite:all-tasks': true
+			'rsuite:all-active': true
 		};
 	window.Contributor = Workflow.constructor.extend({}).create();
+	RSuite.model.tasks.BrowseList.extend()
+		.named("Contributor.BrowseModel")
+		.reopen({
+			fromMap: function (data) {
+				if (data.standardSearches) {
+					this.set('standardSearches', data.standardSearches.filter(function (search) {
+						return !forbiddenWfSearches[search.code];
+					}));
+				} else {
+					this.set('standardSearches', []);
+				}
+				this.set('savedSearches', []);
+				return this;
+			}
+		});
 	Contributor.Activity =  RSuite.Tab.Workflow.extend()
 		.named("Contributor.Activity")
 		.reopenClass({
@@ -17,22 +32,7 @@
 				.named("Contributor.Activity.Controller")
 				.reopenClass({
 					navigators: {
-						Browse: RSuite.Tab.Workflow.Controller.navigators.Browse.extend({
-							bodyView: RSuite.Tab.Workflow.TaskBrowse.extend({
-								modelBinding: null,
-								model: function () {
-									var browseModel = this.get('controller.browseModel');
-									//Copy constructor
-									browseModel = browseModel.constructor.create(browseModel.toJSON());
-									browseModel.reopen({
-										standardSearches: browseModel.standardSearches.filter(function (search) {
-											return !forbiddenWfSearches[search.code];
-										})
-									});
-									return browseModel;
-								}.property('controller.browseModel', 'controller.browseModel.loadState')
-							})
-						})
+						Browse: RSuite.Tab.Workflow.Controller.navigators.Browse
 					},
 					viewers: {
 						Table: RSuite.Tab.Workflow.Controller.viewers.Table.extend({
@@ -49,7 +49,7 @@
 					formModel: null,
 					onSessionResolved: function () {
 						if (RSuite.model.session.key && !this.get('browseModel')) {
-							this.set('browseModel', RSuite.model.tasks.BrowseList.load());
+							this.set('browseModel', Contributor.BrowseModel.load());
 						}
 					}.on('init').observes('RSuite.model.session.key'),
 					contentColumns: function () {
@@ -74,9 +74,26 @@
 			classNames: ['task-button'],
 			iconBinding: 'parentView.oneTransition.icon',
 			click: function () {
-				RSuite.Action('rsuite:advanceTask', { task: this.get('parentView.task') });
+				RSuite.Action('rsuite:advanceTask', { task: this.get('parentView.task') }).then(function () {
+					this.get('controller').reloadResultSet();
+				}.bind(this));
+				return false;
 			},
 			labelBinding: 'parentView.oneTransition.label'
+		}),
+		ClaimView: RSuite.component.UiButton.extend({
+			classNames: ['task-button'],
+			iconBinding: '',
+			label: 'Claim task',
+			click: function () {
+				RSuite.Action('rsuite:acceptTasks', { task: this.get('parentView.task') }).then(function () {
+					this.get('controller').reloadResultSet();
+				}.bind(this));
+				return false;
+			},
+			messagePaths: {
+				complete: "workflow/inspect/summary/actions/claim"
+			}
 		}),
 		TransitionsMenuView: RSuite.component.MenuButton.extend({
 			classNames: ['task-button' ],
@@ -85,7 +102,10 @@
 			messagePaths: {
 				complete: "workflow/inspect/summary/actions/complete"
 			},
-			icon: 'dialog_success'
+			icon: 'dialog_success',
+			_refresh: function () {
+				this.get('controller').reloadResultSet();
+			}.on('actionCompleted')
 		}),
 		task: function () {
 			return this.get('rowView.object.currentTask');
@@ -125,13 +145,18 @@
 		}.property('task'),
 		_updateView: function () {
 			var repl = Math.min(1, this.get('childViews.length')),
-				xct = this.get('transitions.length');
-			if (xct > 1) {
-				this.replace(0, repl, [ this.createChildView(this.TransitionsMenuView, {}) ]);
-			} else if (xct <= 1) {
-				this.replace(0, repl, [ this.createChildView(this.OneTransitionView, {}) ]);
+				xct = this.get('transitions.length'),
+				isMine = this.get('task.assigneeUserId') === RSuite.model.session.get('user.name');
+			if (isMine) {
+				if (xct > 1) {
+					this.replace(0, repl, [ this.createChildView(this.TransitionsMenuView, {}) ]);
+				} else if (xct <= 1) {
+					this.replace(0, repl, [ this.createChildView(this.OneTransitionView, {}) ]);
+				} else {
+					this.replace(0, repl, [ ]);
+				}
 			} else {
-				this.replace(0, repl, [ ]);
+				this.replace(0, repl, [ this.createChildView(this.ClaimView, {}) ]);
 			}
 		},
 		_selectChildView: function () {

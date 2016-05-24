@@ -22,7 +22,10 @@ var CONTIRUBUTOR_ROLE = 'Contributor';
 			'rsuite:createContent': true,
 			'rsuite:newContent': true,
 			'rsuite:workflow:attachContent': true,
-			'rsuite:advanceTask': true
+			'rsuite:advanceTask': true,
+			'rsuite:acceptTasks': true,
+			'rsuite:acceptTask': true,
+			'rsuite:workflow:setPool': true
 		};
 
 	function clearTabs() {
@@ -67,6 +70,60 @@ var CONTIRUBUTOR_ROLE = 'Contributor';
 			RSuite.Action.getAll().forEach(function (action) {
 				if (!allowedContributorActions[action.id]) {
 					action.reopen({ isValid: function () { return false; } });
+				}
+			});
+			Workflow.Task.reopen({
+				displayName: function () {
+					return this.get('shortDisplayName');
+				}.property('shortDisplayName')
+			});
+			RSuite.view.Menu.Item.reopen({
+				click: function (event, view) {
+					var item = this.get('item'),
+						result = Promise.cast(item.invoke());
+					this.get('menuView')
+					result = result.catch(function (err) {
+						var actionId = item.get('action.id'),
+							context = item.get('context'),
+							label = item.get('label'),
+							message = (actionId ? ("Action \"" + label + '\" <' + actionId + ">") : ("Menu item \"" + label + "\"")) + " failed.",
+							properties = {};
+						if (context) { properties.context = context; }
+						if (err) { properties.response = err; }
+						console.groupedInfo({
+							message: message,
+							properties: properties
+						});
+					});
+
+					result.then(function () {
+						this.get('menu').trigger('actionCompleted');
+					}.bind(this));
+					result = result.finally(function () {
+						RSuite.view.Menu.removeAll();
+					});
+				}
+			});
+			RSuite.component.MenuButton.reopen({
+				click: function () {
+					var scope = this.get('scope'),
+						context = this.get('menuContext'),
+						model = this.get('model'),
+						button = this,
+						view = RSuite.view.Menu.extend({
+							anchor: this.$('.ui-button-icon-secondary'),
+							menuContext: context,
+							model: model,
+							trigger: function (event, args) {
+								if (/^(?:action|item|menu)/.test(event)) {
+									button.trigger.apply(button, arguments);
+								}
+								return this._super.apply(this, arguments);
+							}
+						}).create(),
+						thenFn = null;
+					view.show();
+					return false;
 				}
 			});
 		}
