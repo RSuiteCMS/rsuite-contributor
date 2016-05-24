@@ -28,7 +28,8 @@ var CONTIRUBUTOR_ROLE = 'Contributor';
 			'rsuite:acceptTask': true,
 			'rsuite:workflow:setPool': true,
 			'rsuite:workflow:comment': true,
-			'rsuite:destroySession': true
+			'rsuite:destroySession': true,
+			'rsuite:openWindow': true
 		};
 
 	function clearTabs() {
@@ -71,8 +72,13 @@ var CONTIRUBUTOR_ROLE = 'Contributor';
 
 			//Disable non-contributor actions
 			RSuite.Action.getAll().forEach(function (action) {
-				if (!allowedContributorActions[action.id]) {
-					action.reopen({ isValid: function () { return false; } });
+				if (/^rsuite:/.test(action.id) && !allowedContributorActions[action.id]) {
+					action.reopen({ isValid: function () {
+						console.info("Action " + action.id + " denied to contributor");
+						return false;
+					} });
+				} else {
+
 				}
 			});
 			Workflow.Task.reopen({
