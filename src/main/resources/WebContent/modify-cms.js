@@ -22,10 +22,13 @@ var CONTIRUBUTOR_ROLE = 'Contributor';
 			'rsuite:createContent': true,
 			'rsuite:newContent': true,
 			'rsuite:workflow:attachContent': true,
+			'rsuite:workflow:removeAttachment': true,
 			'rsuite:advanceTask': true,
 			'rsuite:acceptTasks': true,
 			'rsuite:acceptTask': true,
-			'rsuite:workflow:setPool': true
+			'rsuite:workflow:setPool': true,
+			'rsuite:workflow:comment': true,
+			'rsuite:destroySession': true
 		};
 
 	function clearTabs() {
