@@ -1,7 +1,7 @@
 var CONTIRUBUTOR_ROLE = 'Contributor';
 (function () {
 	var tabs = RSuite.Tab.get('tabs'),
-		defaultTabs = tabs.slice();
+		defaultTabs;
 		contributorTabs = [
 			Contributor.Activity
 		],
@@ -49,7 +49,8 @@ var CONTIRUBUTOR_ROLE = 'Contributor';
 	};
 	$('html').addClass('contributor');
 	RSuite.model.session.on('key:change', function () {
-		var tabs = RSuite.Tab.get('tabs');
+		var tabs = RSuite.Tab.get('tabs'),
+			defaultTabs = tabs.slice();
 		if (this.get('key') && !this.get('user.roles.' + CONTIRUBUTOR_ROLE)) {
 			addTabs(defaultTabs);
 			$('html').removeClass('contributor');
