@@ -1,14 +1,16 @@
 (function () {
-	var forbiddenWfColumns = {
-			"workflowInstance.id": true,
-			"workflowInstance.workflowDefinitionName": true,
-			"currentTask.id": true,
-			"currentTask.assigneeUserId": true,
-			'currentTask.endDate': true
-		},
-		forbiddenWfSearches = {
+	// Why is this no longer automagical?
+	RSuite.component.ManagedObjectTools.component(['content']);
+	var forbiddenWfSearches = {
 			'rsuite:all-active': true
-		};
+		},
+		contentColumns = [];
+	$.ajax({ url: RSuite.url('@pluginId@', 'contributor-config.xml') }).done(function (xml) {
+		$(xml).find('contributor>workflowResults>column').toArray().forEach(function (col) {
+			col = $(col);
+			contentColumns.push({ name: col.attr('name'), label: col.attr('label'), sortable: !!col.attr('sortable') });
+		});
+	});
 	window.Contributor = Workflow.constructor.extend({}).create();
 	RSuite.model.tasks.BrowseList.extend()
 		.named("Contributor.BrowseModel")
@@ -38,7 +40,7 @@
 						Table: RSuite.Tab.Workflow.Controller.viewers.Table.extend({
 							ListView: RSuite.Tab.Workflow.Controller.viewers.Table.proto().ListView.extend({
 								// Removes the itemNumber and actionMenu columns
-								leadingColumns: [
+								trailingColumns: [
 									{ type: 'completeTask', label: ' ' }
 								]
 							})
@@ -53,23 +55,34 @@
 						}
 					}.on('init').observes('RSuite.model.session.key'),
 					contentColumns: function () {
-						var cols = this.get('resultSet.config.columns') || [];
-						cols = cols.filter(function (column) {
-							//Remove columns: workflow name, ids, assignee
-							return !forbiddenWfColumns[column.name];
-						});
-						return cols;
+						return contentColumns;
 					}.property('resultSet.config.columns'),
 					getColumnView: function (column) {
 						if (column.type === 'completeTask') {
 							return Contributor.CompleteTaskView;
 						}
+						if (column.name === 'attachments') {
+							return Contributor.AttachmentsView;
+						}
 						return this._super.apply(this, arguments);
+					},
+					actions: {
+						contentItemActionMenu: function (anchor, context) {
+							context = Ember.Object.create(
+								Object.getStaticProperties(this.get('resultSet.actionMenuContext') || {}) || {},
+								Object.getStaticProperties(context),
+								{ scope: 'taskDetailsNode' }
+							);
+							var model = RSuite.model.Menu.load(context);
+							var view = RSuite.view.Menu.show(model, anchor.find('td.managed-object-tools'));
+						}
 					}
 				})
 		});
+
 	Contributor.CompleteTaskView = Ember.ContainerView.extend({
 		childViews: [],
+		CompletedView: Ember.View.extend(),
 		OneTransitionView: RSuite.component.UiButton.extend({
 			classNames: ['task-button'],
 			iconBinding: 'parentView.oneTransition.icon',
@@ -144,10 +157,14 @@
 			}
 		}.property('task'),
 		_updateView: function () {
-			var repl = Math.min(1, this.get('childViews.length')),
-				xct = this.get('transitions.length'),
-				isMine = this.get('task.assigneeUserId') === RSuite.model.session.get('user.name');
-			if (isMine) {
+
+			var repl = Math.min(1, this.get('childViews.length'));
+			var isDone = this.get('task.endDate');
+			var xct = this.get('transitions.length');
+			var isMine = this.get('task.assigneeUserId') === RSuite.model.session.get('user.name');
+			if (isDone) {
+				this.replace(0, repl, [ this.createChildView(this.CompletedView, {}) ]);
+			} else if (isMine) {
 				if (xct > 1) {
 					this.replace(0, repl, [ this.createChildView(this.TransitionsMenuView, {}) ]);
 				} else if (xct <= 1) {
@@ -168,6 +185,18 @@
 		oneTransition: function () {
 			return this.get('transitions').objectAt(0);
 		}.property('transitions.0')
+	});
+	Contributor.AttachmentsView = RSuite.component.ManagedObjectTools.extend({
+		actionMenu: false,
+		disclosure: false,
+		depth: false,
+		icon: true,
+		status: true,
+		label: true,
+		contentBinding: 'rowView.object.currentTask.managedObjects.0',
+		isVisible: function () {
+			return !!this.get('content');
+		}.property('content')
 	});
 }());
 RSuite.Action({

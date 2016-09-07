@@ -57,8 +57,13 @@ var CONTIRUBUTOR_ROLE = 'Contributor';
 		} else {
 			$('html').addClass('contributor');
 			// Remove non-contributor inspectors
-			var insp = RSuite.component.WorkflowInspect.proto().controller.inspectors;
-			insp.replace(0, insp.length, ['Comments', 'Attachments']);
+			var insp = RSuite.component.WorkflowInspect.controller.inspectors;
+
+			// Replace the inspectors list with just the one
+			insp.replace(0, insp.length, ['CommentsAndAttachments']);
+			// Disable the panel buttons when just one inspector available.
+			RSuite.component.WorkflowInspect.proto().bodyView.reopen({ showOne: false });
+
 			// Cancel some Workflow stuff.
 			RSuite.controller.reopen({
 				supportEnabled: function () {}.property()
