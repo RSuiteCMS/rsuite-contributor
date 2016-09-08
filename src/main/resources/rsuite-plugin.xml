@@ -1,4 +1,4 @@
-<rsuite-plugin id="@pluginId@" version="@pluginVersion@ at @timeStamp@" description="Demo of various methods of creating a page in RSuite">
+<rsuite-plugin id="@pluginId@" version="@pluginVersion@ at @timeStamp@" description="Reduce RSuite functionality for those with the role, 'Contributor'">
 	<lifecycleListener type="com.reallysi.contributor.ContributorPluginLifecycleListener" />
 	<extensionProvider id="rsuite.WebService">
 		<staticWebService path="/WebContent" root="/@pluginId@"/>
@@ -6,8 +6,10 @@
 
 	<extensionProvider id="rsuite.UI">
 		<scriptInclude src="/@pluginId@/Contributor.js" />
+		<scriptInclude src="/@pluginId@/CommentsAndAttachmentsView.js" />
 		<scriptInclude src="/@pluginId@/modify-cms.js" />
 		<styleInclude src="/@pluginId@/modify-cms.less" />
+		<messageTable src="/@pluginId@/messages.xml" />
 	</extensionProvider>
 
 </rsuite-plugin>
