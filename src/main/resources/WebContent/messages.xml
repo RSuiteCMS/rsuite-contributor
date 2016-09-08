@@ -1,0 +1,8 @@
+<messages group="workflow">
+	<messages group="inspect/comments-and-attachments">
+		<message name="title">Comments and Attachments</message>
+	</messages>
+	<messages group="columns">
+		<messge name="attachments">Attached</messge>
+	</messages>
+</messages>

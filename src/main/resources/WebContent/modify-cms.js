@@ -48,6 +48,7 @@ var CONTIRUBUTOR_ROLE = 'Contributor';
 		});
 	};
 	$('html').addClass('contributor');
+	Contributor.actionsDisabled = true;
 	RSuite.model.session.on('key:change', function () {
 		var tabs = RSuite.Tab.get('tabs'),
 			defaultTabs = tabs.slice();
@@ -81,7 +82,11 @@ var CONTIRUBUTOR_ROLE = 'Contributor';
 				if (/^rsuite:/.test(action.id) && !allowedContributorActions[action.id]) {
 					action.reopen({ isValid: function () {
 						console.info("Action " + action.id + " denied to contributor");
-						return false;
+						if (Contributor.actionsDisabled) {
+							return true;
+						} else {
+							return this._super.apply(this, arguments);
+						}
 					} });
 				} else {
 

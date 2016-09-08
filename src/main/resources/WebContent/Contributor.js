@@ -3,15 +3,24 @@
 	RSuite.component.ManagedObjectTools.component(['content']);
 	var forbiddenWfSearches = {
 			'rsuite:all-active': true
-		},
-		contentColumns = [];
+		};
+	var workflowColumns = [];
+	var contentColumns = [];
+
 	$.ajax({ url: RSuite.url('@pluginId@', 'contributor-config.xml') }).done(function (xml) {
 		$(xml).find('contributor>workflowResults>column').toArray().forEach(function (col) {
+			col = $(col);
+			workflowColumns.push({ name: col.attr('name'), label: col.attr('label'), sortable: !!col.attr('sortable') });
+		});
+		$(xml).find('contributor>attachments>column').toArray().forEach(function (col) {
 			col = $(col);
 			contentColumns.push({ name: col.attr('name'), label: col.attr('label'), sortable: !!col.attr('sortable') });
 		});
 	});
 	window.Contributor = Workflow.constructor.extend({}).create();
+	Contributor.workflowColumns = workflowColumns;
+	Contributor.contentColumns = contentColumns;
+
 	RSuite.model.tasks.BrowseList.extend()
 		.named("Contributor.BrowseModel")
 		.reopen({
@@ -54,9 +63,7 @@
 							this.set('browseModel', Contributor.BrowseModel.load());
 						}
 					}.on('init').observes('RSuite.model.session.key'),
-					contentColumns: function () {
-						return contentColumns;
-					}.property('resultSet.config.columns'),
+					contentColumns: workflowColumns,
 					getColumnView: function (column) {
 						if (column.type === 'completeTask') {
 							return Contributor.CompleteTaskView;
