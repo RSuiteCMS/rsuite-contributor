@@ -14,9 +14,9 @@ Contributor experience should be a pared down workflow page:
 
 1. Inspect "View" button
 1. Inspect "Download" button
-1. Inspect "Add attachment" button
+1. ~~Inspect "Add attachment" button~~
 1. ~~Attachments/Comments sxs~~
-1. Attachments should be listed by attachment time
+1. ~~Attachments should be listed by attachment time~~
 1. ~~Header row missing.~~
 
 -----

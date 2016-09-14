@@ -36,6 +36,7 @@
 				return this;
 			}
 		});
+
 	Contributor.Activity =  RSuite.Tab.Workflow.extend()
 		.named("Contributor.Activity")
 		.reopenClass({
@@ -193,17 +194,30 @@
 			return this.get('transitions').objectAt(0);
 		}.property('transitions.0')
 	});
-	Contributor.AttachmentsView = RSuite.component.ManagedObjectTools.extend({
-		actionMenu: false,
-		disclosure: false,
-		depth: false,
-		icon: true,
-		status: true,
-		label: true,
-		contentBinding: 'rowView.object.currentTask.managedObjects.0',
-		isVisible: function () {
-			return !!this.get('content');
-		}.property('content')
+	Contributor.AttachmentsView = Ember.CollectionView.extend({
+		contentBinding: 'rowView.object.currentTask.managedObjects',
+		tagName: 'td',
+		createChildView: function (View, options) {
+			console.log(this, arguments);
+			return this._super.apply(this, arguments);
+		},
+		itemViewClass: RSuite.component.ManagedObjectTools.extend({
+			tagName: 'managed-object',
+			actionMenu: false,
+			disclosure: false,
+			depth: false,
+			icon: true,
+			status: true,
+			label: true,
+			isVisible: function () {
+				return !!this.get('content');
+			}.property('content'),
+			ObjectIconView:  RSuite.component.ManagedObjectTools.proto().ObjectIconView.extend({
+				clickable: false,
+				click: null
+			}),
+			contentBinding: null
+		})
 	});
 }());
 RSuite.Action({

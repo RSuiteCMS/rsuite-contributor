@@ -3,6 +3,6 @@
 		<message name="title">Comments and Attachments</message>
 	</messages>
 	<messages group="columns">
-		<messge name="attachments">Attached</messge>
+		<message name="attachments">Attached</message>
 	</messages>
 </messages>
