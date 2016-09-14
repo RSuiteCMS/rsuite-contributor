@@ -47,17 +47,39 @@
 						columns: Contributor.contentColumns,
 						leadingColumns: [],
 						trailingColumns: [
+							{ type: 'view', label: ' ' },
+							{ type: 'download', label: ' ' },
 							{ type: 'edit', label: ' ' },
 							{ type: 'upload', label: ' ' },
 							{ type: 'remove', label: ' ' }
 						],
 						getColumnView: function (column) {
+							if (column.type === 'view') { return C_A.ViewButton; }
+							if (column.type === 'download') { return C_A.DownloadButton; }
 							if (column.type === 'edit') { return C_A.EditButtons; }
 							if (column.type === 'upload') { return C_A.UploadButton; }
 							return this._super(column);
 						}
 					})
 				})
+			}),
+			ViewButton: RSuite.view.Icon.extend({
+				title: "Preview",
+				model: "preview",
+				size: 24,
+				click: function () {
+					RSuite.Action('rsuite:preview', { managedObject: this.get('rowView.object') });
+					return false;
+				}
+			}),
+			DownloadButton: RSuite.view.Icon.extend({
+				title: "Download",
+				model: "download",
+				size: 24,
+				click: function () {
+					RSuite.Action('rsuite:download', { managedObject: this.get('rowView.object') });
+					return false;
+				}
 			}),
 			WebEditButton: EditButton.extend({
 				title: "Edit XML with Oxygen Web Editor",
@@ -102,7 +124,10 @@
 				}
 			})
 		});
-	C_A.EditButtons = Ember.CollectionView.extend({ childViews: [ C_A.WebEditButton, C_A.DeskEditButton ] });
+	C_A.EditButtons = Ember.CollectionView.extend({
+		classNames: 'edit-buttons',
+		childViews: [ C_A.WebEditButton, C_A.DeskEditButton ]
+	});
 	RSuite.component.WorkflowInspect.reopen({
 		CommentsAndAttachments: RSuite.component.NavigableSection.Navigator.extend({
 			icon: 'attachments',

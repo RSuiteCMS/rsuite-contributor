@@ -25,14 +25,25 @@
 		}
 	}
 	.task-attachments .edit-buttons rs-icon:last-of-type {
-		margin-right: 18px;
+		margin-right: 9px;
 	}
 	.task-attachments .edit-buttons rs-icon {
-		margin: 0 9px;
+		margin: 0 12px 0 0;
 	}
 	.task-attachments .edit-buttons {
 		width: 1px;
 		white-space: nowrap;
+	}
+	.task-comments {
+		padding: 0;
+	}
+	.inspect h2 {
+		font-size: 1.15em;
+		margin-left: 0;
+		&>rs-icon {
+			vertical-align: -6px;
+			font-size: 24px !important;
+		}
 	}
 }
 /* Fix for bug in jQuery */
@@ -42,4 +53,5 @@
 .comments-and-attachments-view {
 	display: flex;
 	flex-direction: row;
+	flex-wrap: wrap;
 }
