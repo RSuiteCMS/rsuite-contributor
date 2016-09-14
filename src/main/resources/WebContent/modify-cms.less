@@ -37,21 +37,37 @@
 	.task-comments {
 		padding: 0;
 	}
-	.inspect h2 {
-		font-size: 1.15em;
-		margin-left: 0;
-		&>rs-icon {
-			vertical-align: -6px;
-			font-size: 24px !important;
+	.inspect {
+		h2 {
+			font-size: 1.15em;
+			margin-left: 0;
+			&>rs-icon {
+				vertical-align: -6px;
+				font-size: 24px !important;
+			}
+		}
+		.comments-and-attachments-view {
+			display: flex;
+			flex-direction: row;
+			flex-wrap: wrap;
+			&>* {
+				flex: 1 1 50%;
+				padding: 0 0.5em;
+				.border-box();
+			}
+			.scrollable-tile {
+				overflow: visible;
+				.task-attachments {
+					overflow: visible;
+				}
+
+			}
 		}
 	}
+
+
 }
 /* Fix for bug in jQuery */
 .ui-button.ui-button-text-icon-secondary, .ui-button.ui-button-text-icons {
 	padding-right: 1.5em;
-}
-.comments-and-attachments-view {
-	display: flex;
-	flex-direction: row;
-	flex-wrap: wrap;
 }

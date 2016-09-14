@@ -197,10 +197,6 @@
 	Contributor.AttachmentsView = Ember.CollectionView.extend({
 		contentBinding: 'rowView.object.currentTask.managedObjects',
 		tagName: 'td',
-		createChildView: function (View, options) {
-			console.log(this, arguments);
-			return this._super.apply(this, arguments);
-		},
 		itemViewClass: RSuite.component.ManagedObjectTools.extend({
 			tagName: 'managed-object',
 			actionMenu: false,
