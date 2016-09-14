@@ -10,6 +10,30 @@ This should be developed as a demo plugin, and not expected to last as "real cod
 
 Contributor experience should be a pared down workflow page:
 
+[2016-09-14] Bugfixes and missed targets:
+
+1. Inspect "View" button
+1. Inspect "Download" button
+1. Inspect "Add attachment" button
+1. ~~Attachments/Comments sxs~~
+1. Attachments should be listed by attachment time
+1. ~~Header row missing.~~
+
+-----
+
+[2016-08-21] New bugfixes and adjustments:
+
+1. ~~No more support link for RSuite 5.0.3+~~
+1. ~~Task completion buttons are now on the right~~
+1. ~~"Completed" tasks should _not_ have a complete task button~~
+1. ~~Inspect "Attachments" and "Comments" views now merged.~~
+1. ~~Columns for workflow results and attachments are now configurable (see: src/main/resources/WebContent/contributor-config.xml)~~
+1. ~~"Attachments" view now has "Edit" and "Upload" buttons~~
+1. ~~Workflow results now contain first attachment as default config~~
+1. ~~Eliminated `forbiddenWFColumns`, now that it's configurable independent of RSuite.~~
+
+-----
+
 1. ~~Use the "Contributor" role to determine whether the user gets the Contributor experience~~
 1. ~~All top navigation components should be removed except the RSuite logo and the user name/user menu.~~
 1. ~~Only the workflow page should be present (no Contents, Reports, or Dashboard page)~~
@@ -44,15 +68,4 @@ Contributor experience should be a pared down workflow page:
 
 Requirements should be complete
 
------
 
-New bugfixes and adjustments:
-
-1. ~~No more support link for RSuite 5.0.3+~~
-1. ~~Task completion buttons are now on the right~~
-1. ~~"Completed" tasks should _not_ have a complete task button~~
-1. ~~Inspect "Attachments" and "Comments" views now merged.~~
-1. ~~Columns for workflow results and attachments are now configurable (see: src/main/resources/WebContent/contributor-config.xml)~~
-1. ~~"Attachments" view now has "Edit" and "Upload" buttons~~
-1. ~~Workflow results now contain first attachment as default config~~
-1. ~~Eliminated `forbiddenWFColumns`, now that it's configurable independent of RSuite.~~
