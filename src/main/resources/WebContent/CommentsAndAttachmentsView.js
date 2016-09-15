@@ -1,8 +1,16 @@
 (function () {
+	var haveZipDownloader = false;
+	$(function () {
+		haveZipDownloader = !!RSuite.model.serverConfig.plugins.find(function (plugin) { console.log(plugin); return plugin.name === 'rsuite-zip-downloader-plugin'; });;
+	});
 	var Attachments = RSuite.component.WorkflowInspect.AttachmentsView;
 	var EditButton = RSuite.view.Icon.extend({
 		ok: false,
 		modelIfOK: 'edit',
+		titleIfOk: "Edit",
+		title: function () {
+			return this.get('ok') ? this.get('titleIfOk') : '';
+		}.property('ok', 'titleIfOk'),
 		actionSpec: {},
 		editable: function () {
 			return this.get('parentView.rowView.object.finalManagedObject.objectType') === 'mo';
@@ -64,25 +72,71 @@
 				})
 			}),
 			ViewButton: RSuite.view.Icon.extend({
-				title: "Preview",
+				ok: function () {
+					var ot = this.get('rowView.object.finalManagedObject.objectType');
+					if (ot === 'ca' || ot === 'canode') {
+						return true;
+					}
+					return false;
+				}.property('rowView.object.finalManagedObject.objectType'),
+				title: function () {
+					return this.get('ok') ? "Preview" : '';
+				}.property('ok'),
 				model: "preview",
 				size: 24,
 				click: function () {
-					RSuite.Action('rsuite:preview', { managedObject: this.get('rowView.object') });
+					if (this.get('ok')) {
+						RSuite.Action('rsuite:preview', { managedObject: this.get('rowView.object') });
+					}
 					return false;
 				}
 			}),
 			DownloadButton: RSuite.view.Icon.extend({
-				title: "Download",
-				model: "download",
+				mode: function () {
+					var ot = this.get('rowView.object.finalManagedObject.objectType');
+					if (ot === 'ca' || ot === 'canode') {
+						return haveZipDownloader ? 'ca' : undefined;
+					}
+					if (ot === 'mo' || ot === 'mononxml') {
+						return 'mo';
+					}
+					return;
+				}.property('rowView.object.finalManagedObject.objectType'),
+				title: function () {
+					switch(this.get('mode')) {
+						case 'mo': return "Download";
+						case 'ca': return 'Download as zip';
+					}
+				}.property('mode'),
+				model: function () {
+					switch (this.get('mode')) {
+						case 'mo': return "download";
+						case 'ca': return 'download_as_zip';
+					}
+				}.property('mode'),
 				size: 24,
 				click: function () {
-					RSuite.Action('rsuite:download', { managedObject: this.get('rowView.object') });
+					var manObj = this.get('rowView.object');
+					switch (this.get('mode')) {
+						case 'mo':
+							RSuite.Action('rsuite:download', { managedObject: this.get('rowView.object') });
+							break;
+						case 'ca':
+							RSuite.Action("rsuite:invokeWebservice",{
+								managedObject: manObj,
+								propertyMap: {
+									useTransport: "iframe",
+									type: "get",
+									timeout: 0,
+									remoteApiName: "rsuite.downloadAsZip"
+								}
+							});
+					}
 					return false;
 				}
 			}),
 			WebEditButton: EditButton.extend({
-				title: "Edit XML with Oxygen Web Editor",
+				titleIfOk: "Edit XML with Oxygen Web Editor",
 				actionSpec: {
 					actionName: 'rsuite:invokeWebservice',
 					context: {
@@ -97,7 +151,6 @@
 				}.property('RSuite.model.session.key'),
 			}),
 			DeskEditButton: EditButton.extend({
-				title: "Edit with Oxygen (desktop)",
 				modelIfOK: function () {
 					return RSuite.Action.get(this.actionSpec.actionName).icon;
 				}.property(),
@@ -107,19 +160,43 @@
 				},
 				ok: function () {
 					return RSuite.Action.get('oxygen:editOxygen');
-				}.property('RSuite.model.session.key')
+				}.property('RSuite.model.session.key'),
+				titleIfOk: "Edit with Oxygen (desktop)"
 			}),
 			UploadButton: RSuite.view.Icon.extend({
-				model:function () {
+				mode: function () {
 					var ot = this.get('rowView.object.finalManagedObject.objectType');
-					if (ot !== 'mo' && ot !== 'mononxml') {
-						return 'blank';
+					if (ot === 'ca' || ot === 'canode') {
+						return 'ca';
 					}
-					return 'upload_new_version';
-				}.property('rowView.object.finalManagedObject.objectType', 'actionSpec'),
+					if (ot === 'mo' || ot === 'mononxml') {
+						return 'mo';
+					}
+					return;
+				}.property('rowView.object.finalManagedObject.objectType'),
+				model: function () {
+					switch (this.get('mode')) {
+						case 'ca': return 'upload';
+						case 'mo': return 'upload_new_version';
+					}
+				}.property('mode'),
+				title: function () {
+					switch(this.get('mode')) {
+						case 'ca': return "Upload file";
+						case 'mo': return 'Upload new version';
+					}
+				}.property('mode'),
 				size: 24,
 				click: function () {
-					RSuite.Action('rsuite:replace', { managedObject: this.get('rowView.object') });
+					var manObj = this.get('rowView.object');
+					switch (this.get('mode')) {
+						case 'mo':
+							RSuite.Action('rsuite:replace', { managedObject: manObj });
+							break;
+						case 'ca':
+							RSuite.Action('rsuite:uploadFiles', { managedObject: manObj });
+							break;
+					}
 					return false;
 				}
 			})
