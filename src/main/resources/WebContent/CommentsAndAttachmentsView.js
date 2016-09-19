@@ -1,7 +1,13 @@
 (function () {
-	var haveZipDownloader = false;
+	var ZD = Ember.Object.create({
+		haveZipDownloader: false
+	});
 	$(function () {
-		haveZipDownloader = !!RSuite.model.serverConfig.plugins.find(function (plugin) { console.log(plugin); return plugin.name === 'rsuite-zip-downloader-plugin'; });;
+		RSuite.model.session.done(function () {
+			ZD.set('haveZipDownloader', !!RSuite.model.serverConfig.plugins.find(function (plugin) {
+				return plugin.name === 'rsuite-zip-downloader-plugin';
+			}));
+		});
 	});
 	var Attachments = RSuite.component.WorkflowInspect.AttachmentsView;
 	var EditButton = RSuite.view.Icon.extend({
@@ -92,28 +98,29 @@
 				}
 			}),
 			DownloadButton: RSuite.view.Icon.extend({
+				ZD: ZD,
 				mode: function () {
 					var ot = this.get('rowView.object.finalManagedObject.objectType');
 					if (ot === 'ca' || ot === 'canode') {
-						return haveZipDownloader ? 'ca' : undefined;
+						return this.get('ZD.haveZipDownloader') ? 'ca' : undefined;
 					}
 					if (ot === 'mo' || ot === 'mononxml') {
 						return 'mo';
 					}
 					return;
-				}.property('rowView.object.finalManagedObject.objectType'),
+				}.property('rowView.object.finalManagedObject.objectType', 'ZD.haveZipDownloader'),
 				title: function () {
 					switch(this.get('mode')) {
 						case 'mo': return "Download";
-						case 'ca': return 'Download as zip';
+						case 'ca': return this.get('ZD.haveZipDownloader') ? 'Download as zip' : '';
 					}
 				}.property('mode'),
 				model: function () {
 					switch (this.get('mode')) {
 						case 'mo': return "download";
-						case 'ca': return 'download_as_zip';
+						case 'ca': return this.get('ZD.haveZipDownloader') ? 'download_as_zip' : '';
 					}
-				}.property('mode'),
+				}.property('mode', 'ZD.haveZipDownloader'),
 				size: 24,
 				click: function () {
 					var manObj = this.get('rowView.object');
@@ -122,6 +129,9 @@
 							RSuite.Action('rsuite:download', { managedObject: this.get('rowView.object') });
 							break;
 						case 'ca':
+							if (!this.get('ZD.haveZipDownloader')) {
+								break;
+							}
 							RSuite.Action("rsuite:invokeWebservice",{
 								managedObject: manObj,
 								propertyMap: {
@@ -131,6 +141,7 @@
 									remoteApiName: "rsuite.downloadAsZip"
 								}
 							});
+							break;
 					}
 					return false;
 				}
