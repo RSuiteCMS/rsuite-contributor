@@ -1,10 +1,10 @@
 (function () {
 	var ZD = Ember.Object.create({
-		haveZipDownloader: false
+		present: false
 	});
 	$(function () {
 		RSuite.model.session.done(function () {
-			ZD.set('haveZipDownloader', !!RSuite.model.serverConfig.plugins.find(function (plugin) {
+			ZD.set('present', !!RSuite.model.serverConfig.plugins.find(function (plugin) {
 				return plugin.name === 'rsuite-zip-downloader-plugin';
 			}));
 		});
@@ -98,29 +98,29 @@
 				}
 			}),
 			DownloadButton: RSuite.view.Icon.extend({
-				ZD: ZD,
+				zipDownloader: ZD,
 				mode: function () {
 					var ot = this.get('rowView.object.finalManagedObject.objectType');
 					if (ot === 'ca' || ot === 'canode') {
-						return this.get('ZD.haveZipDownloader') ? 'ca' : undefined;
+						return this.get('zipDownloader.present') ? 'ca' : undefined;
 					}
 					if (ot === 'mo' || ot === 'mononxml') {
 						return 'mo';
 					}
 					return;
-				}.property('rowView.object.finalManagedObject.objectType', 'ZD.haveZipDownloader'),
+				}.property('rowView.object.finalManagedObject.objectType', 'zipDownloader.present'),
 				title: function () {
 					switch(this.get('mode')) {
 						case 'mo': return "Download";
-						case 'ca': return this.get('ZD.haveZipDownloader') ? 'Download as zip' : '';
+						case 'ca': return this.get('zipDownloader.present') ? 'Download as zip' : '';
 					}
 				}.property('mode'),
 				model: function () {
 					switch (this.get('mode')) {
 						case 'mo': return "download";
-						case 'ca': return this.get('ZD.haveZipDownloader') ? 'download_as_zip' : '';
+						case 'ca': return this.get('zipDownloader.present') ? 'download_as_zip' : '';
 					}
-				}.property('mode', 'ZD.haveZipDownloader'),
+				}.property('mode', 'zipDownloader.present'),
 				size: 24,
 				click: function () {
 					var manObj = this.get('rowView.object');
@@ -129,7 +129,7 @@
 							RSuite.Action('rsuite:download', { managedObject: this.get('rowView.object') });
 							break;
 						case 'ca':
-							if (!this.get('ZD.haveZipDownloader')) {
+							if (!this.get('zipDownloader.present')) {
 								break;
 							}
 							RSuite.Action("rsuite:invokeWebservice",{
