@@ -29,15 +29,28 @@ var CONTIRUBUTOR_ROLE = 'Contributor';
 			'rsuite:workflow:setPool': true,
 			'rsuite:workflow:comment': true,
 			'rsuite:destroySession': true,
-			'rsuite:openWindow': true
+			'rsuite:openWindow': true,
+			'rsuite:preview': true,
+			'rsuite:previewAsset': true,
+			'rsuite:uploadFiles': true,
+			'rsuite:inspect': true
 		};
-
+	var removeUrls = ["inspect/**", "admin", "admin/**", "inspect/user:*", "inspect/plugin:*", "workflowAdmin", "workflowAdmin/*", "content", "content/*", "content/Browse/**", "browseFrom/**", "content/Search/*", "browse/**", "reports", "reports/*", "dashboard"];
 	function clearTabs() {
-		/* Wipe out default config */
 		tabs.replace(0, tabs.length, []);
-		RSuite.Tab.get('tabs').forEach(function (tab) {
-			Object.keys(tab).forEach(function (pattern) {
-				delete RSuite.Tab.get('urlActions')[pattern];
+		removeUrls.forEach(function (pattern) {
+			RSuite.Tab.removePattern(pattern);
+		});
+		removeUrls.forEach(function (pattern) {
+			RSuite.Tab.urlAction(pattern, null, function () {
+				RSuite.Tab.activate(Contributor.Activity);
+				setTimeout(function () {
+					RSuite.notify({
+						title: "Not allowed",
+						message: "As a Contributor, you are not permitted to view RSuite outside of the Contributor Inbox",
+						icon: 'dialog_failure'
+					});
+				}, 2000);
 			});
 		});
 	}
@@ -50,10 +63,7 @@ var CONTIRUBUTOR_ROLE = 'Contributor';
 	$('html').addClass('contributor');
 	Contributor.actionsDisabled = true;
 	RSuite.model.session.on('key:change', function () {
-		var tabs = RSuite.Tab.get('tabs'),
-			defaultTabs = tabs.slice();
 		if (this.get('key') && !this.get('user.roles.' + CONTIRUBUTOR_ROLE)) {
-			addTabs(defaultTabs);
 			$('html').removeClass('contributor');
 		} else {
 			$('html').addClass('contributor');
@@ -69,9 +79,6 @@ var CONTIRUBUTOR_ROLE = 'Contributor';
 			RSuite.controller.reopen({
 				supportEnabled: function () {}.property()
 			});
-			RSuite.component.WorkflowInspect.AttachmentsView.proto().headerViews[0].proto().AddButton.reopen({
-				actionName: 'contributor:uploadAndAttach'
-			});
 			RSuite.Action.rules.isFullUser = new RSuite.Action.Rule(function (context) {
 				return !RSuite.session.get('user.roles.Contributor');
 			});
@@ -83,7 +90,7 @@ var CONTIRUBUTOR_ROLE = 'Contributor';
 					action.reopen({ isValid: function () {
 						console.info("Action " + action.id + " denied to contributor");
 						if (Contributor.actionsDisabled) {
-							return true;
+							return false;
 						} else {
 							return this._super.apply(this, arguments);
 						}
@@ -146,7 +153,107 @@ var CONTIRUBUTOR_ROLE = 'Contributor';
 					return false;
 				}
 			});
+			RSuite.Action.get('rsuite:advanceTask').reopen({
+				invoke: function (context) {
+					var taskId = context.get('task.id');
+					var wfId = context.get('task.workflowInstanceId');
+					var wdoTaskId = RSuite.controller.get("detailsObject.currentTaskId");
+					var wdoWfId = RSuite.controller.get("detailsObject.workflowInstanceId");
+					return this._super.call(this, context).then(function () {
+						if (wdoTaskId === taskId && wdoWfId === wfId) {
+							RSuite.controller.set('detailsEnabled', false);
+							RSuite.controller.set('detailsObject', null);
+							RSuite.controller.set('detailsObjectData', null);
+							RSuite.controller.set('detailsView', null);
+							RSuite.controller.set('detailsObjectId', null);
+						}
+					});
+				}
+			});
 		}
+		RSuite.Tab.setDefault(Contributor.Activity);
+		//RSuite.Tab.activate(Contributor.Activity);
+		RSuite.Tab.Workflow.Controller.proto().navigationControls[0].reopen({ rsuiteRole: 'action-menu' });
+		RSuite.component.ManagedObjectTools.reopen({
+			ObjectIconView:  RSuite.component.ManagedObjectTools.proto().ObjectIconView.extend({
+				clickable: false,
+				click: null
+			})
+		});
 	}.bind(RSuite.model.session));
-	RSuite.Tab.Workflow.Controller.proto().navigationControls[0].reopen({ role: 'action-menu' });
+	//Hotfix for core code.
+	if (!/tasks/.test(String(RSuite.Action.get('rsuite:workflow:attachContent').addAttachments))) {
+		RSuite.Action.get('rsuite:workflow:attachContent').reopen({
+			addAttachments: function (context) {
+				var mos = Ember.Set.create(),
+					newList = [];
+				context.get('managedObjects').forEach(function (mo) {
+					mos.push(mo.get('finalManagedObject.canonicalId'));
+				});
+				var task = context.get('tasks.0') || context.get('task');
+				var ids = (Ember.get(task, 'managedObjectIds') || []);
+				ids.forEach(function (id) {
+					mos.push(id);
+				});
+				mos = mos.toArray();
+				Ember.set(task, 'managedObjectIds', mos);
+				mos = mos.map(function (id) {
+					return { name: 'id', value: id };
+				});
+				return new Promise(function (resolve, reject) {
+					RSuite.services({
+						type: 'post',
+						service: 'workflow/task/' + Ember.get(task, 'id') + '/content',
+						data: mos,
+						json: true
+					})
+					.done(function () {
+						resolve();
+						task.notifyPropertyChange("managedObjectIds");
+					}).fail(reject);
+				});
+			}
+		});
+		RSuite.Action.get('rsuite:workflow:removeAttachment').reopen({
+			invoke: function (context) {
+				var mos = Ember.Set.create(),
+					toRemove = context.get('managedObjects') || [ context.get('managedObject') ];
+				context.get('task.managedObjectIds').forEach(function (id) {
+					mos.push(id);
+				});
+
+				toRemove.forEach(function (mo) {
+					mos.removeObject(mo.get('finalManagedObject.canonicalId'));
+					mos.removeObject(mo.get('referenceManagedObject.canonicalId'));
+				});
+				mos = mos.toArray().map(function (id) {
+					return { name: 'id', value: id };
+				});
+				var task = context.get('task');
+				return new Promise(function (resolve, reject) {
+					RSuite.services({
+						type: 'post',
+						service: 'workflow/task/' + Ember.get(task, 'id') + '/content',
+						data: mos,
+						json: true
+					})
+					.done(function () {
+						resolve();
+						task.notifyPropertyChange("managedObjectIds");
+					}).fail(reject);
+				});
+			}
+		});
+		//Default sort
+		RSuite.model.TaskResultSet.reopen({
+			sort: 'currentTask.dueDate:asc'
+		});
+	}
+	//Fix `isXml` rule in CMS
+	RSuite.Action.rules.isXml = new RSuite.Action.Rule(function (context) {
+		return context.get('managedObject.finalManagedObject.objectType') === 'mo' && !context.get('managedObject.finalManagedObject.nonXml');
+	});
+	
+	RSuite.Action.rules.isXml[Ember.NAME_KEY] = 'isXml';
+
 }());

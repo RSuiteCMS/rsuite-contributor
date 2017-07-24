@@ -2,16 +2,16 @@
 	#app-layout {
 		div.app-header { height: 30px !important; }
 		div.app-body { top: 30px !important; }
-		ul.app-tabs[role="chrome-tabs"], rsuite-tile.app-popouts { display: none !important; }
+		ul.app-tabs, rsuite-tile.app-popouts { display: none !important; }
 		rsuite-tile.app-menu-tile { display: none !important; }
 		rsuite-tile.app-session-tile { padding-top: 3px !important; }
 		rsuite-tile.support-view { display: none !important; }
 		.app-tools .support-site { display: none !important; }
 	}
 	rsuite-tile.navigation-view rs-icon[role="action-menu"] { display: none; }
-	.complete-task-view {
+	.complete-task-view, .view-task-view {
 		width: 1px;
-		vertical-align: middle;
+		vertical-align: top;
 		.ui-button.task-button {
 			rs-icon.ui-button-icon-primary {
 				icon {
@@ -23,6 +23,10 @@
 			}
 			margin: 0.25em 0.5em;
 		}
+	}
+	.view-task-view {
+		padding-left: 0.5em;
+		padding-top: 0.375em;
 	}
 	.task-attachments td.icon icon {
 		color: @palette-brightSeaBlue;
@@ -37,8 +41,15 @@
 		width: 1px;
 		white-space: nowrap;
 	}
+	.task-attachments .action-buttons {
+		width: 100px;
+		white-space: nowrap;
+	}
 	.task-comments {
 		padding: 0;
+		h2.heading rs-icon {
+			display: none;
+		}
 	}
 	.inspect {
 		h2 {
@@ -55,24 +66,32 @@
 		.comments-and-attachments-view {
 			display: flex;
 			flex-direction: row;
-			flex-wrap: wrap;
 			&>* {
 				flex: 1 1 50%;
 				padding: 0 2em;
 				.border-box();
 			}
 			.scrollable-tile {
-				overflow: visible;
-				.task-attachments {
-					overflow: visible;
-				}
-
+				overflow: auto;
 			}
 		}
 	}
 
-
+	.dialog-replace {
+		label[for="check-in-with-upload"], label[for="check-in-with-upload"]+div.input {
+			opacity: 0;
+			margin-bottom: -1em;
+		}
+	}
+	.task-comments-disabled .add-comment {
+		display: none;
+	}
+	.sidebar-container .section-header rs-icon[rsuiteRole="action-menu"] {
+		display: none;
+	}
 }
+
+
 /* Fix for bug in jQuery */
 .ui-button.ui-button-text-icon-secondary, .ui-button.ui-button-text-icons {
 	padding-right: 1.5em;

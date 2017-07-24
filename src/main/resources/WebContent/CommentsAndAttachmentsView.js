@@ -1,221 +1,220 @@
 (function () {
-	var ZD = Ember.Object.create({
-		present: false
-	});
-	$(function () {
-		RSuite.model.session.done(function () {
-			ZD.set('present', !!RSuite.model.serverConfig.plugins.find(function (plugin) {
-				return plugin.name === 'rsuite-zip-downloader-plugin';
-			}));
-		});
-	});
-	var Attachments = RSuite.component.WorkflowInspect.AttachmentsView;
-	var EditButton = RSuite.view.Icon.extend({
-		ok: false,
-		modelIfOK: 'edit',
-		titleIfOk: "Edit",
-		title: function () {
-			return this.get('ok') ? this.get('titleIfOk') : '';
-		}.property('ok', 'titleIfOk'),
-		actionSpec: {},
-		editable: function () {
-			return this.get('parentView.rowView.object.finalManagedObject.objectType') === 'mo';
-		}.property('parentView.rowView.object.finalManagedObject.objectType'),
-		model: function () {
-			var s = this.get('actionSpec');
-			if (!this.get('ok') || !this.get('editable') || !s.actionName) {
-				return 'blank';
-			}
-			return this.get('modelIfOK');
-		}.property('parentView.rowView.object.finalManagedObject.objectType', 'actionSpec'),
-		size: 24,
-		mousedown: function (e) {
-			return false;
-		},
-		click: function (e) {
-			var s = this.get('actionSpec');
-			if (!this.get('editable') || !this.get('ok') || !s.actionName) { return; }
-			var context = Object.assign({}, s.context || {}, { managedObject: this.get('parentView.rowView.object') });
-			console.log(context);
-			RSuite.Action(s.actionName, context);
-			return false;
-		},
-		title: "Edit",
+	var Attachments = RSuite.component.WorkflowInspect.AttachmentsView.extend();
+	Attachments.reopen({
+		headerViews: Attachments.proto().headerViews.slice().replace(0, 1, [
+			Attachments.proto().headerViews[0].extend({ 
+				AddButton: Attachments.proto().headerViews[0].proto().AddButton.extend({ 
+					isVisible: true,
+					isEnabled: function () {
+						var startDate = this.get('sectionView.content.currentTask.startDate'),
+							endDate = this.get('sectionView.content.currentTask.endDate');
+						return !!startDate && !endDate;
+					}.property('sectionView.content.currentTask', 'sectionView.content.currentTask.startDate', 'sectionView.content.endDate'),
+					// Button always present, just grayed out if invalid; logic copied from original `isVisible`.
+					style: function () {
+						var enabled = this.get('isEnabled'),
+							style = 'width: 1em; height: 1em; font-size: ' + this.get('size') + 'px';
+						if (!enabled) {
+							style += '; opacity: 0.5; color: #333; cursor: default; pointer-events: none';
+						}
+						return style;
+					}.property('size', 'isEnabled'),
+					actionName: 'contributor:uploadAndAttach',
+					_click: function () {
+						if (!this.get('isEnabled')) {
+							return false;
+						}
+						return this._super.apply(this, arguments);
+					}
+				})
+			})
+		])
 	});
 	var C_A = Ember.ContainerView.extend()
 		.named('RSuite.component.WorkflowInspect.CommentsAndAttachmentsView')
 		.reopen({
 			childViews: [ 'attachmentsView', 'commentsView' ],
-			commentsView: function () { return this.createChildView(this.constructor.CommentsView); }.property(),
+			commentsView: function () { 
+				return this.createChildView(this.constructor.CommentsView); 
+			}.property(),
 			attachmentsView: function () {
 				return this.createChildView(this.constructor.AttachmentsView);
-			}.property()
+			}.property(),
+			preloadModel: function () {
+				var wdo = this.get('sectionView.sectionView.content');
+				wdo.set('currentTask', Workflow.Task.getCached(wdo.get('currentTaskId')).load(true));
+				wdo.set('workflowInstance', Workflow.Instance.getCached(wdo.get('workflowInstanceId')).load(true));
+			}.on('willInsertElement')
 		})
 		.reopenClass({
-			CommentsView: RSuite.component.WorkflowInspect.CommentsView,
+			CommentsView: RSuite.component.WorkflowInspect.CommentsView.extend({
+				//Fixes Markdown comments in 5.1.x-5.2
+				showdown: new Showdown.converter(),
+				isEnabled: function () {
+					var startDate = this.get('sectionView.sectionView.content.currentTask.startDate'),
+						endDate = this.get('sectionView.sectionView.content.currentTask.endDate');
+					return !!startDate && !endDate;
+				}.property('sectionView.sectionView.content.currentTask', 'sectionView.sectionView.content.currentTask.startDate', 'sectionView.sectionView.content.endDate'),
+				addComment: function () {
+					RSuite.Action('rsuite:workflow:comment', { 
+						workflow: this.get('workflow.id'), 
+						comment: this.showdown.makeHtml(this.get('localComment'))
+					});
+					this.set('localComment', '');
+					return false;
+				},
+				classNameBindings: ['isEnabled::task-comments-disabled']
+			}),
 			AttachmentsView: Attachments.extend({
 				bodyView: Attachments.proto().bodyView.extend({
 					TaskManagedObjectsView: Attachments.proto().bodyView.proto().TaskManagedObjectsView.extend({
 						rowClick: function () {},
 						columnsBinding: null,
-						columns: Contributor.contentColumns,
+						columns: Contributor.attachmentConfig.columns,
+						clickRow: function () {},
 						leadingColumns: [],
-						trailingColumns: [
-							{ type: 'view', label: ' ' },
-							{ type: 'download', label: ' ' },
-							{ type: 'edit', label: ' ' },
-							{ type: 'upload', label: ' ' },
-							{ type: 'remove', label: ' ' }
-						],
+						trailingColumns: [],
 						getColumnView: function (column) {
-							if (column.type === 'view') { return C_A.ViewButton; }
-							if (column.type === 'download') { return C_A.DownloadButton; }
-							if (column.type === 'edit') { return C_A.EditButtons; }
-							if (column.type === 'upload') { return C_A.UploadButton; }
+							if (column.name === 'actions') { return C_A.ActionButtonsView; }
 							return this._super(column);
-						}
+						},
+						model: function () {
+							var task = this.get('sectionView.content.currentTask');
+							if (!task) {
+								return RSuite.model.BlankResultSet.create({
+									content: [],
+									loadState: 'pending',
+									loaded: false
+								});
+							}
+							task.addObserver('loadState', this, function () {
+								var tmp = task.get('loaded');
+								task.set('loaded', !tmp);
+								setTimeout(function () {
+									task.set('loaded', task.get('loadState') === 'loaded');
+								}, 50);
+							});
+							return RSuite.model.BlankResultSet.create({
+								task: task,
+								contentBinding: 'task.managedObjects',
+								lengthBinding: 'content.length',
+								loadStateBinding: 'task.loadState',
+								loadedBinding: 'task.loaded'
+							});
+						}.property('sectionView.content.currentTask', 'sectionView.content.currentTask.loadState')
 					})
+					
 				})
 			}),
-			ViewButton: RSuite.view.Icon.extend({
-				ok: function () {
-					var ot = this.get('rowView.object.finalManagedObject.objectType');
-					if (ot === 'ca' || ot === 'canode') {
-						return true;
-					}
-					return false;
-				}.property('rowView.object.finalManagedObject.objectType'),
-				title: function () {
-					return this.get('ok') ? "Preview" : '';
-				}.property('ok'),
-				model: "preview",
-				size: 24,
-				click: function () {
-					if (this.get('ok')) {
-						RSuite.Action('rsuite:preview', { managedObject: this.get('rowView.object') });
-					}
-					return false;
-				}
-			}),
-			DownloadButton: RSuite.view.Icon.extend({
-				zipDownloader: ZD,
-				mode: function () {
-					var ot = this.get('rowView.object.finalManagedObject.objectType');
-					if (ot === 'ca' || ot === 'canode') {
-						return this.get('zipDownloader.present') ? 'ca' : undefined;
-					}
-					if (ot === 'mo' || ot === 'mononxml') {
-						return 'mo';
-					}
-					return;
-				}.property('rowView.object.finalManagedObject.objectType', 'zipDownloader.present'),
-				title: function () {
-					switch(this.get('mode')) {
-						case 'mo': return "Download";
-						case 'ca': return this.get('zipDownloader.present') ? 'Download as zip' : '';
-					}
-				}.property('mode'),
-				model: function () {
-					switch (this.get('mode')) {
-						case 'mo': return "download";
-						case 'ca': return this.get('zipDownloader.present') ? 'download_as_zip' : '';
-					}
-				}.property('mode', 'zipDownloader.present'),
-				size: 24,
-				click: function () {
-					var manObj = this.get('rowView.object');
-					switch (this.get('mode')) {
-						case 'mo':
-							RSuite.Action('rsuite:download', { managedObject: this.get('rowView.object') });
-							break;
-						case 'ca':
-							if (!this.get('zipDownloader.present')) {
-								break;
-							}
-							RSuite.Action("rsuite:invokeWebservice",{
-								managedObject: manObj,
-								propertyMap: {
-									useTransport: "iframe",
-									type: "get",
-									timeout: 0,
-									remoteApiName: "rsuite.downloadAsZip"
+			ActionButtonsView: Ember.ContainerView.extend({
+				classNames: [ 'action-buttons' ],
+				content: null,
+				menuContext: function () {
+					if (this.get('content.loadState') !== 'loaded') { return; }
+					return this.get('content.actionMenuContext');
+				}.property('content', 'content.loadState'),
+				updateContent: function () {
+					var no = this.get('rowView.object');
+					if (!no) { return; }
+					this.set('content', no);
+				}.on('init').observes('tableView.model', 'rowView.object', 'rowView.object.loadState'),
+				childViews: [
+					Ember.CollectionView.extend({
+						content: Contributor.attachmentConfig.buttons,
+						cellViewBinding: 'parentView',
+						itemViewClass: RSuite.view.Icon.extend({
+							classNames: [ 'action-button' ],
+							childViews: [],
+							cellViewBinding: 'parentView.cellView',
+							objectBinding: 'cellView.content',
+							validateAction: function () {
+								if (!this.get('object')) { return; }
+								if (this.get('object.loadState') !== 'loaded') { return; }
+								var context = this.get('parentView.parentView.menuContext');
+								var actions = this.get('content').slice();
+								if (!actions.length) {
+									this.set('disabledAction', '$blank');
 								}
-							});
-							break;
-					}
-					return false;
-				}
-			}),
-			WebEditButton: EditButton.extend({
-				titleIfOk: "Edit XML with Oxygen Web Editor",
-				actionSpec: {
-					actionName: 'rsuite:invokeWebservice',
-					context: {
-						propertyMap: {
-							remoteApiName: 'rsuite-oxygen-webeditor-plugin.EditXML',
-							useTransport: 'window'
-						}
-					}
-				},
-				ok: function () {
-					return !!RSuite.model.serverConfig.plugins.find(function (plugin) { return plugin.name === "rsuite-oxygen-webeditor-plugin" });
-				}.property('RSuite.model.session.key'),
-			}),
-			DeskEditButton: EditButton.extend({
-				modelIfOK: function () {
-					return RSuite.Action.get(this.actionSpec.actionName).icon;
-				}.property(),
-				size: 16,
-				actionSpec: {
-					actionName: 'oxygen:editOxygen'
-				},
-				ok: function () {
-					return RSuite.Action.get('oxygen:editOxygen');
-				}.property('RSuite.model.session.key'),
-				titleIfOk: "Edit with Oxygen (desktop)"
-			}),
-			UploadButton: RSuite.view.Icon.extend({
-				mode: function () {
-					var ot = this.get('rowView.object.finalManagedObject.objectType');
-					if (ot === 'ca' || ot === 'canode') {
-						return 'ca';
-					}
-					if (ot === 'mo' || ot === 'mononxml') {
-						return 'mo';
-					}
-					return;
-				}.property('rowView.object.finalManagedObject.objectType'),
-				model: function () {
-					switch (this.get('mode')) {
-						case 'ca': return 'upload';
-						case 'mo': return 'upload_new_version';
-					}
-				}.property('mode'),
-				title: function () {
-					switch(this.get('mode')) {
-						case 'ca': return "Upload file";
-						case 'mo': return 'Upload new version';
-					}
-				}.property('mode'),
-				size: 24,
-				click: function () {
-					var manObj = this.get('rowView.object');
-					switch (this.get('mode')) {
-						case 'mo':
-							RSuite.Action('rsuite:replace', { managedObject: manObj });
-							break;
-						case 'ca':
-							RSuite.Action('rsuite:uploadFiles', { managedObject: manObj });
-							break;
-					}
-					return false;
-				}
+								var defaultIcon = actions[0] && actions[0].icon;
+								var testAction = function () {
+									if (this.isDestroying || this.isDestroyed) { return; }
+									if (actions.length) {
+										var action = actions.shift();
+										action.rule(context).then(function () {
+											this.set('validAction', action);
+											this.set('disabledAction', null);
+										}.bind(this), testAction);
+									} else {
+										this.set('disabledAction', defaultIcon);
+										this.set('validAction', null);
+									}
+								}.bind(this);
+								testAction();
+								this.set('title', RSuite.messageTable.get('contributor/attachments/disabled'));
+							}.on('init').observes('parentView.parentView.menuContext', 'content', 'object.loadState'),
+							validAction: null,
+							disabledAction: null,
+							size: 24,
+							model: '$blank',
+							finalMenuContext: function () {
+								return Object.assign({}, this.get('parentView.parentView.menuContext'), this.get('validAction'));
+							}.property('parentView.parentView.menuContext', 'validAction'),
+							style: function () {
+								var style = 'width: 1em; height: 1em; font-size: ' + this.get('size') + 'px';
+								if (this.get('disabledAction')) {
+									style += '; opacity: 0.5; color: #333; cursor: default';
+								}
+								return style;
+							}.property('size', 'disabledAction'),
+							setModels: function () {
+								if (this.isDestroying || this.isDestroyed) { return; }
+								
+								var disabled = this.get('disabledAction');
+								if (disabled) {
+									this.set('model', disabled);
+									this.set('disabled', true);
+									this.set('title', RSuite.messageTable.get('contributor/attachments/disabled'));
+									return; 
+								}
+								
+								var action = this.get('validAction');
+								var ctx = this.get('object.actionMenuContext');
+								
+								if (!action || !ctx) { return; }
+								if (action.action.adjust) {
+									var mi = RSuite.model.Menu.Item.create({
+										label: action.get('label'),
+										icon: action.get('icon')
+									});	
+									if (action.action.adjust) {
+										action.action.adjust(RSuite.Action.Context.create(ctx), mi);
+									}
+									var icon = mi.get('icon');
+									if (typeof icon === 'string') {
+										icon = icon.split(',');
+									}
+									icon = icon.filter(function (a) { return !!a; });
+									this.set('model', icon[0]);
+									this.set('title', mi.get('label'));
+								} else {
+									this.set('model', action.get('icon'));
+									this.set('title', action.get('label'));
+								}
+								this.set('disabled', false);
+							}.observes('validAction', 'disabledAction', 'object.actionMenuContext'),
+							click: function () {
+								if (!this.get('disabledAction') && this.get('validAction') && this.get('object.actionMenuContext')) {
+									this.get('validAction.action').invoke(RSuite.Action.Context.create(this.get('finalMenuContext')));
+								}
+							},
+							clickable: function () {
+								return !this.get('disabledAction');
+							}.property('disabledAction')
+						})
+					})
+				]
 			})
 		});
-	C_A.EditButtons = Ember.CollectionView.extend({
-		classNames: 'edit-buttons',
-		childViews: [ C_A.WebEditButton, C_A.DeskEditButton ]
-	});
 	RSuite.component.WorkflowInspect.reopen({
 		CommentsAndAttachments: RSuite.component.NavigableSection.Navigator.extend({
 			icon: 'attachments',
@@ -224,4 +223,26 @@
 			labelBinding: 'RSuite.messageTable.workflow/inspect/comments-and-attachments/title'
 		}).create()
 	});
+	
+	if (!RSuite.isPopup) {
+		RSuite.component.WorkflowInspect.controller.reopen({
+			taskChanged: function () {
+				var task = this.get('task');
+				if (task.get('loadState') === 'new') {
+					task.load(true);
+					var onLoad = function () { 
+						Ember.removeObserver(task, 'loadState', task, onLoad); 
+						// Dunno why the double-tap matters, but it seems to.
+						setTimeout(function () {
+							task.set('loadState', 'jiggling');
+							setTimeout(function () {
+								task.set('loadState', 'loaded');
+							}, 125);
+						}, 125);
+					};
+					Ember.addObserver(task, 'loadState', task, onLoad);
+				}
+			}.observes('task')
+		});
+	}
 }());

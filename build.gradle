@@ -13,3 +13,7 @@ dependencies {
     compile("apache:commons-logging:1.1")
     compile("apache:commons-io:1.4")
 }
+
+jar () {
+	baseName = 'rsuite-contributor-plugin'
+}

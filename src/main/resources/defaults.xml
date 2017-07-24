@@ -1,0 +1,90 @@
+<!-- Server-level override of Contributor configuration is done in {RSUITE_HOME}/conf/contributor.xml, which follows the same format as this file -->
+<!-- 
+	* This is the `defaults` version of the file, embedded in the plugin.  It is used only if the server-level file is not present.
+	* All @labels in this version of the file are message references, indicated by the leading '/'.  @labels without the leading '/' are treated as raw user-facing text
+	* Most icons in this file are references to a named RSuite font icon (see: RSuite.Icon.getIconManifest() on the console of a running instance); 
+	* One icon is a reference to an icon in the O2 integration plugin, demonstrating how to use image icons
+-->
+<contributor>
+	<!-- workflowResults is a list of columns to use for displaying workflow results -->
+	<workflowResults> 
+		<!-- same names as in workflow search config with a couple of exceptions... -->
+		<column name="currentTask.name" label="/workflow/columns/taskName" />
+		<!-- `attachments` triggers the use of the Contributor-provided attachments list -->
+		<column name="attachments" label="/workflow/columns/attachments" />
+		<column name="currentTask.description" label="/workflow/columns/taskDescription" />
+		<column name="currentTask.priority" label="/workflow/columns/priority" />
+		<column name="currentTask.startDate" label="/workflow/columns/taskDateCreated" />
+		<column name="currentTask.dueDate" label="/workflow/columns/taskDateDue" />
+		<!-- `comments` triggers the use of the Contributor-provided last comment display -->
+		<column name="comments" label="/workflow/columns/comments" />
+	</workflowResults>
+	<attachments>
+		<!-- same names as in content search config with one exception... -->
+		<column name="id" label="/search/columns/id"/>
+		<column name="displayName" label="/search/columns/displayName"/>
+		<column name="dtCreated" label="/search/columns/dtCreated"/>
+		<column name="dtModified" label="/search/columns/dtModified"/>
+		<!-- `actions` triggers use of the actions column, which is configured via the `button` elements below -->
+		<column name="actions" label="/contributor/attachments/actions" />
+		<!-- each `button` tag represents one column in the `actions` column; the first `action` in that column that matches the row's menuContext is displayed -->
+		<button>
+		<!-- `@rule` is optional, but can be used to expand on the action's native restrictions.  It's based on the client side rule spec, as the server-side rules were too painful to implement in a reasonable manner. -->
+			<action
+				name="rsuite:previewAsset"
+				rule="!isCA"
+			/>
+
+		</button>
+		<button>
+			<!-- As with the client-side rule spec, rules are boolean combinations of keywords, with parentheticals supported -->
+			<!-- Boolean operators: '&', '|', '!'; remember, in XML, '&' becomes '&amp;' -->
+			<action
+				name="rsuite:download"
+				rule="!(isCA | isCANode)"
+			/>
+			<!-- @remoteApiName, @useTransport, and @timeout are valid with rsuite:invokeWebservice -->
+			<!-- If you can't count on `@label` or `@icon` to be provided by the action (like with invokeWebservice), you can provide one -->
+			<action 
+				name="rsuite:invokeWebservice" 
+				label="/contributor/attachments/download-zip"
+				remoteApiName="rsuite.downloadAsZip" 
+				useTransport="iframe" 
+				timeout="0" 
+				icon="downloadAsZip" 
+				rule="(isCA | isCANode) &amp; zipDownloaderInstalled"
+			/>			
+		</button>
+		<button>
+			<!-- Known plugin-provided XML editors; we define this custom rule. -->
+			<action 
+				name="rsuite:invokeWebservice"
+				label="/contributor/attachments/edit-o2-web"
+				icon="edit"
+				remoteApiName="rsuite-oxygen-webeditor-plugin.EditXML"
+				useTransport="window"
+				timeout="0"
+				rule="isXml &amp; o2webEditorInstalled"
+			/>
+			<action
+				name="oxygen:editOxygen"
+				label="/contributor/attachments/edit-o2-desktop"
+				rule="isXml &amp; o2desktopEditorInstalled"
+			/>
+		</button>
+		<button>
+			<action
+				name="rsuite:uploadFiles"
+				label="/contributor/attachments/upload-files"
+				icon="upload"
+				rule="isCA | isCANode"
+			/>
+			<action
+				name="rsuite:replace"
+				label="/contributor/attachments/replace"
+				icon="upload"
+				rule="isXml | isBinary"
+			/>
+		</button>
+	</attachments>
+</contributor>

@@ -1,8 +1,23 @@
-<messages group="workflow">
-	<messages group="inspect/comments-and-attachments">
-		<message name="title">Comments and Attachments</message>
+<messages>
+	<messages group="workflow">
+		<messages group="inspect/comments-and-attachments">
+			<message name="title">Comments and Attachments</message>
+		</messages>
+		<messages group="columns">
+			<message name="attachments">Attached</message>
+			<message name="comments">Last comment</message>
+		</messages>
+		<message name="view-task">View</message>
 	</messages>
-	<messages group="columns">
-		<message name="attachments">Attached</message>
+	<messages group="contributor">
+		<messages group="attachments">
+			<message name="actions">Actions</message>
+			<message name="download-zip">Download as Zip</message>
+			<message name="edit-o2-web">Edit in oXygen Web editor</message>
+			<message name="edit-o2-desktop">Edit in oXygen Desktop</message>
+			<message name="disabled">Action not applicable to this object</message>
+			<message name="upload-files">Upload files to this folder</message>
+			<message name="replace">Upload new version</message>
+		</messages>
 	</messages>
 </messages>

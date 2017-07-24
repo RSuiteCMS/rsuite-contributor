@@ -2,6 +2,7 @@
 	<lifecycleListener type="com.reallysi.contributor.ContributorPluginLifecycleListener" />
 	<extensionProvider id="rsuite.WebService">
 		<staticWebService path="/WebContent" root="/@pluginId@"/>
+		<remoteApiDefinition handler="com.reallysi.contributor.ContributorConf" id="@pluginId@:ContributorConf"/>
 	</extensionProvider>
 
 	<extensionProvider id="rsuite.UI">
