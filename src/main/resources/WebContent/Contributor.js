@@ -28,7 +28,7 @@
 	});
 	RSuite.Action.rules.o2desktopEditorInstalled = new RSuite.Action.Rule(function (context) {
 		return !!o2DesktopPlugin && !!RSuite.Action.get('oxygen:editOxygen');
-	});	
+	});
 	RSuite.Action({
 		id: 'contributor:uploadAndAttach',
 		icon: 'add',
@@ -119,7 +119,7 @@
 	].reduce(function (o, i) { o[i] = true; return o; }, {});
 	RSuite.model.session.addObserver('key', null, function () {
 		if (RSuite.model.session.key) {
-			$.ajax({ url: RSuite.restUrl(1, 'api/@pluginId@:ContributorConf') }).done(function (xml) {
+			$.ajax({ url: RSuite.restUrl(1, 'api/@pluginId@:ContributorConf?skey=' + RSuite.model.get('session.key')) }).done(function (xml) {
 				$(xml).find('contributor>workflowResults>column').toArray().forEach(function (col) {
 					col = $(col);
 					var name = col.attr('name').trim();
@@ -168,7 +168,7 @@
 		}
 	});
 	window.Contributor = Workflow.constructor.extend({}).create();
-	
+
 	Contributor.workflowColumns = workflowColumns;
 	Contributor.attachmentConfig = {
 		columns: contentColumns,
@@ -290,7 +290,7 @@
 				labelBinding: 'RSuite.messageTable.workflow/view-task'
 			})
 		]
-		
+
 	});
 	Contributor.CompleteTaskView = Ember.ContainerView.extend({
 		childViews: [],
@@ -345,7 +345,9 @@
 					task: this.get('task'),
 					scope: 'inspect'
 				};
-			if (modelTransitions && modelTransitions.length > 1) {
+			//TODO: review logic in else, it does not resolve the transitions properly.
+            //For now the condition is changed to be modelTransitions.length > 0 instead of modelTransitions.length > 1 (RCS-7246)
+			if (modelTransitions && modelTransitions.length > 0) {
 				return modelTransitions.map(function (transition) {
 					return RSuite.model.Menu.Item.extend({
 						icon: "workflow_task",
@@ -383,8 +385,9 @@
 			} else if (isMine) {
 				if (xct > 1) {
 					this.replace(0, repl, [ this.createChildView(this.TransitionsMenuView, {}) ]);
-				} else if (xct <= 1) {
-					this.replace(0, repl, [ this.createChildView(this.OneTransitionView, {}) ]);
+				} else if (xct <= 1) { //TODO: changed transition view from OneTransitionView to TransitionsMenuView
+					//as OneTransitionView is not resolving transitions properly (RCS-7246)
+					this.replace(0, repl, [ this.createChildView(this.TransitionsMenuView, {}) ]);
 				} else {
 					this.replace(0, repl, [ ]);
 				}

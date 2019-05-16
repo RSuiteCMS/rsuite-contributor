@@ -33,7 +33,9 @@ var CONTIRUBUTOR_ROLE = 'Contributor';
 			'rsuite:preview': true,
 			'rsuite:previewAsset': true,
 			'rsuite:uploadFiles': true,
-			'rsuite:inspect': true
+			'rsuite:inspect': true,
+			'rsuite:locales': true,
+			'rsuite:setLocale': true
 		};
 	var removeUrls = ["inspect/**", "admin", "admin/**", "inspect/user:*", "inspect/plugin:*", "workflowAdmin", "workflowAdmin/*", "content", "content/*", "content/Browse/**", "browseFrom/**", "content/Search/*", "browse/**", "reports", "reports/*", "dashboard"];
 	function clearTabs() {
@@ -66,15 +68,30 @@ var CONTIRUBUTOR_ROLE = 'Contributor';
 		if (this.get('key') && !this.get('user.roles.' + CONTIRUBUTOR_ROLE)) {
 			$('html').removeClass('contributor');
 		} else {
+			
+			//Default sort
+			RSuite.model.TaskResultSet.reopen({
+				sort: 'currentTask.dueDate:asc'
+			});
+			
 			$('html').addClass('contributor');
+			if (window.Workflow.Inspect) {
+				// Add class so 5.3+ styles get hit.
+				$('html').addClass('contributor-5-3');
+			}
 			// Remove non-contributor inspectors
-			var insp = RSuite.component.WorkflowInspect.controller.inspectors;
-
-			// Replace the inspectors list with just the one
-			insp.replace(0, insp.length, ['CommentsAndAttachments']);
-			// Disable the panel buttons when just one inspector available.
-			RSuite.component.WorkflowInspect.proto().bodyView.reopen({ showOne: false });
-
+			if (Workflow.Inspect) {
+				Inspect.controller.titleViews.length = 0;
+				Inspect.registerTitleView(Contributor.Workflow.TitleView);
+				Inspect.controller.inspectors.length = 0;
+				Inspect.registerInspector(Contributor.Workflow.CommentsAndAttachmentsInspector);
+			} else {
+				var insp = RSuite.component.WorkflowInspect.controller.inspectors;
+				// Replace the inspectors list with just the one
+				insp.replace(0, insp.length, ['CommentsAndAttachments']);
+				// Disable the panel buttons when just one inspector available.
+				RSuite.component.WorkflowInspect.proto().bodyView.reopen({ showOne: false });
+			}
 			// Cancel some Workflow stuff.
 			RSuite.controller.reopen({
 				supportEnabled: function () {}.property()
@@ -244,9 +261,36 @@ var CONTIRUBUTOR_ROLE = 'Contributor';
 				});
 			}
 		});
-		//Default sort
-		RSuite.model.TaskResultSet.reopen({
-			sort: 'currentTask.dueDate:asc'
+		RSuite.Action.get('rsuite:preview').reopen({
+			invoke: function (context) {
+				var mo = Ember.get(context, 'managedObject'),
+					revision = Ember.get(context, 'revision'),
+					apiUrl = RSuite.model.ManagedObject.proto().uri.call(mo, Ember.merge({}, context.propertyMap || {}, context));
+				if (revision) {
+					if (apiUrl.includes("?")) {
+						apiUrl += '&revision=' + revision;
+					} else {
+						apiUrl += '?revision=' + revision;
+					}
+				}
+				if(!apiUrl.includes("skey")) {
+					if (apiUrl.includes("?")) {
+						apiUrl = apiUrl + "&skey=" + RSuite.model.get('session.key');
+					} else {
+						apiUrl = apiUrl + "?skey=" + RSuite.model.get('session.key');
+					}
+				}
+
+				
+				RSuite.openWindow(apiUrl, Object.assign({
+					title: (Ember.get(context, 'label') || RSuite.messageTable.get("actions/id/rsuite/preview/label")) + " " + Ember.get(mo, 'finalManagedObject.id'),
+					left: 400,
+					top: 0,
+					width: 850,
+					height: 700
+				}, Ember.get(context, 'windowOptions') || {}));
+				return RSuite.success;
+			}
 		});
 	}
 	//Fix `isXml` rule in CMS
@@ -255,5 +299,4 @@ var CONTIRUBUTOR_ROLE = 'Contributor';
 	});
 	
 	RSuite.Action.rules.isXml[Ember.NAME_KEY] = 'isXml';
-
 }());
